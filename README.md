@@ -2,7 +2,7 @@
 
 > Countdown to the Unix Year 2038 Problem — when signed 32-bit integers overflow and time resets to 1901.
 
-**Live demo:** `https://BinaryFIX.github.io/epochalypse`
+**Live demo:** https://BinaryFIX.github.io/epochalypse
 
 ---
 
