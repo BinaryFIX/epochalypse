@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Y2K38 COUNTDOWN — EPOCHALYPSE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap');
+
+  :root {
+    --bg: #000a00;
+    --green: #00ff41;
+    --green-dim: #00aa2a;
+    --green-glow: #00ff4180;
+    --amber: #ffb000;
+    --red: #ff2200;
+    --cyan: #00ffff;
+    --white: #e8ffe8;
+    --scanline: rgba(0,255,65,0.03);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* CRT scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scanline) 2px,
+      var(--scanline) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: flicker 0.15s infinite;
+  }
+
+  /* CRT vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 60%,
+      rgba(0,0,0,0.7) 100%
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  @keyframes flicker {
+    0%   { opacity: 1; }
+    92%  { opacity: 1; }
+    93%  { opacity: 0.85; }
+    94%  { opacity: 1; }
+    96%  { opacity: 0.9; }
+    100% { opacity: 1; }
+  }
+
+  /* Matrix rain canvas */
+  #matrix {
+    position: fixed;
+    inset: 0;
+    opacity: 0.12;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    gap: 2rem;
+  }
+
+  /* Top header bar */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 1.5rem;
+    border-bottom: 1px solid var(--green-dim);
+    background: rgba(0, 10, 0, 0.85);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    z-index: 100;
+  }
+
+  .topbar .blink {
+    animation: blink 1s step-end infinite;
+    color: var(--red);
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Main title */
+  .title-block {
+    text-align: center;
+  }
+
+  .title-block .label {
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    color: var(--green-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .title-block h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 8vw, 6rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    text-shadow:
+      0 0 10px var(--green),
+      0 0 40px var(--green-glow),
+      0 0 80px var(--green-glow);
+    line-height: 1;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 10px var(--green), 0 0 40px var(--green-glow), 0 0 80px var(--green-glow); }
+    50%       { text-shadow: 0 0 20px var(--green), 0 0 70px var(--green-glow), 0 0 120px var(--green-glow); }
+  }
+
+  .title-block .subtitle {
+    font-family: 'VT323', monospace;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: var(--amber);
+    letter-spacing: 0.2em;
+    margin-top: 0.5rem;
+    text-shadow: 0 0 8px var(--amber);
+  }
+
+  /* Target date display */
+  .target {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+    text-align: center;
+    text-shadow: 0 0 6px var(--cyan);
+    border: 1px solid rgba(0,255,255,0.3);
+    padding: 0.4rem 1.5rem;
+    background: rgba(0,255,255,0.04);
+  }
+
+  /* Countdown grid */
+  .countdown {
+    display: flex;
+    gap: clamp(0.5rem, 2vw, 2rem);
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .unit-value {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 8vw, 5.5rem);
+    font-weight: 700;
+    color: var(--green);
+    text-shadow: 0 0 15px var(--green), 0 0 40px var(--green-glow);
+    background: rgba(0,255,65,0.05);
+    border: 1px solid rgba(0,255,65,0.3);
+    border-top: 2px solid var(--green);
+    padding: 0.3em 0.6em;
+    min-width: 2.5ch;
+    text-align: center;
+    position: relative;
+    transition: color 0.1s;
+  }
+
+  .unit-value::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,255,65,0.06) 0%, transparent 50%, rgba(0,255,65,0.02) 100%);
+    pointer-events: none;
+  }
+
+  .unit-value.changed {
+    color: var(--amber);
+    text-shadow: 0 0 15px var(--amber), 0 0 40px rgba(255,176,0,0.5);
+    border-top-color: var(--amber);
+  }
+
+  .unit-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--green-dim);
+    text-transform: uppercase;
+  }
+
+  .separator {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--green-dim);
+    padding-top: 0.2em;
+    animation: sep-blink 1s step-end infinite;
+    align-self: flex-start;
+    padding-top: clamp(0.4rem, 2vw, 0.7rem);
+  }
+
+  @keyframes sep-blink {
+    50% { opacity: 0.2; }
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    width: min(600px, 90vw);
+    text-align: left;
+  }
+
+  .progress-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--green-dim);
+    margin-bottom: 0.4rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(0,255,65,0.1);
+    border: 1px solid rgba(0,255,65,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-dim), var(--green));
+    box-shadow: 0 0 8px var(--green);
+    transition: width 1s linear;
+  }
+
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(0,10,0,0.4) 18px,
+      rgba(0,10,0,0.4) 20px
+    );
+  }
+
+  /* System stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem;
+    width: min(640px, 90vw);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
+  .stat-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem;
+    border-left: 2px solid var(--green-dim);
+    background: rgba(0,255,65,0.02);
+  }
+
+  .stat-line .key { color: var(--green-dim); }
+  .stat-line .val { color: var(--green); }
+
+  /* Warning block */
+  .warning {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: var(--red);
+    text-shadow: 0 0 8px var(--red);
+    letter-spacing: 0.15em;
+    text-align: center;
+    border: 1px solid rgba(255,34,0,0.4);
+    padding: 0.5rem 1.5rem;
+    background: rgba(255,34,0,0.04);
+    animation: warn-pulse 2s ease-in-out infinite;
+    max-width: 90vw;
+  }
+
+  @keyframes warn-pulse {
+    0%, 100% { border-color: rgba(255,34,0,0.4); }
+    50%       { border-color: rgba(255,34,0,0.9); box-shadow: 0 0 12px rgba(255,34,0,0.3); }
+  }
+
+  /* Footer */
+  .footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 1.5rem;
+    border-top: 1px solid var(--green-dim);
+    background: rgba(0,10,0,0.85);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--green-dim);
+    z-index: 100;
+  }
+
+  /* Scrolling ticker */
+  .ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--green-dim);
+    border-bottom: 1px solid var(--green-dim);
+    background: rgba(0,255,65,0.03);
+    padding: 0.3rem 0;
+  }
+
+  .ticker {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  @keyframes ticker-scroll {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="topbar">
+  <span>SYS://EPOCHALYPSE.EXE</span>
+  <span class="blink">⚠ CRITICAL TIMER ACTIVE ⚠</span>
+  <span id="live-clock">--:--:-- UTC</span>
+</div>
+
+<div class="container">
+
+  <div class="title-block">
+    <div class="label">// UNIX TIMESTAMP OVERFLOW EVENT //</div>
+    <h1>Y2K38</h1>
+    <div class="subtitle">THE EPOCHALYPSE COUNTDOWN</div>
+  </div>
+
+  <div class="target">TARGET: 2038-01-19T03:14:07Z &nbsp;|&nbsp; UNIX: 2147483647</div>
+
+  <div class="countdown">
+    <div class="unit">
+      <div class="unit-value" id="d">0000</div>
+      <div class="unit-label">DAYS</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="unit">
+      <div class="unit-value" id="h">00</div>
+      <div class="unit-label">HOURS</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="unit">
+      <div class="unit-value" id="m">00</div>
+      <div class="unit-label">MINUTES</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="unit">
+      <div class="unit-value" id="s">00</div>
+      <div class="unit-label">SECONDS</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>ELAPSED SINCE UNIX EPOCH [1970-01-01]</span>
+      <span id="pct">--%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="pfill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-line"><span class="key">SECONDS_LEFT</span><span class="val" id="total-sec">--</span></div>
+    <div class="stat-line"><span class="key">UNIX_MAX</span><span class="val">2,147,483,647</span></div>
+    <div class="stat-line"><span class="key">INT32_OVERFLOW</span><span class="val">−2,147,483,648</span></div>
+    <div class="stat-line"><span class="key">AFFECTED_ARCH</span><span class="val">32-BIT UNIX</span></div>
+  </div>
+
+  <div class="warning">
+    ⚠ WARNING: SIGNED 32-BIT INTEGER WILL OVERFLOW &nbsp;|&nbsp; T-MINUS <span id="warn-days">----</span> DAYS ⚠
+  </div>
+
+  <div class="ticker-wrap">
+    <span class="ticker">
+      &nbsp;&nbsp;&nbsp;
+      Y2K38 EPOCHALYPSE IMMINENT &nbsp;///&nbsp;
+      UNIX TIMESTAMP OVERFLOW DETECTED &nbsp;///&nbsp;
+      2038-01-19 03:14:07 UTC — THE MOMENT OF SILENCE &nbsp;///&nbsp;
+      32-BIT SYSTEMS WILL ROLL BACK TO 1901-12-13 &nbsp;///&nbsp;
+      UPDATE YOUR SYSTEMS. PATCH YOUR KERNELS. &nbsp;///&nbsp;
+      INT32_MAX = 2147483647 &nbsp;///&nbsp;
+      EPOCHALYPSE.EXE RUNNING...
+      &nbsp;&nbsp;&nbsp;
+    </span>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>UNIX_EPOCH_OVERFLOW_MONITOR v2.038</span>
+  <span id="foot-date">----</span>
+</div>
+
+<script>
+// ─── Matrix Rain ───────────────────────────────────────────────
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+let cols, drops;
+
+function initMatrix() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const fs = 14;
+  cols = Math.floor(canvas.width / fs);
+  drops = Array(cols).fill(1);
+}
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(0,10,0,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00ff41';
+  ctx.font = '14px Share Tech Mono';
+  const chars = '01アイウエオカキクケコ';
+  for (let i = 0; i < drops.length; i++) {
+    const ch = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(ch, i * 14, drops[i] * 14);
+    if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+
+initMatrix();
+window.addEventListener('resize', initMatrix);
+setInterval(drawMatrix, 50);
+
+// ─── Countdown ─────────────────────────────────────────────────
+const TARGET = new Date('2038-01-19T03:14:07Z').getTime();
+const EPOCH  = new Date('1970-01-01T00:00:00Z').getTime();
+const TOTAL  = TARGET - EPOCH;
+
+const elD = document.getElementById('d');
+const elH = document.getElementById('h');
+const elM = document.getElementById('m');
+const elS = document.getElementById('s');
+const elTotalSec = document.getElementById('total-sec');
+const elPct  = document.getElementById('pct');
+const elPfill = document.getElementById('pfill');
+const elWarnDays = document.getElementById('warn-days');
+const elClock = document.getElementById('live-clock');
+const elFootDate = document.getElementById('foot-date');
+
+function pad(n, w=2) { return String(n).padStart(w,'0'); }
+
+function flash(el) {
+  el.classList.add('changed');
+  setTimeout(() => el.classList.remove('changed'), 800);
+}
+
+let prevS = -1, prevM = -1, prevH = -1, prevD = -1;
+
+function tick() {
+  const now  = Date.now();
+  const diff = TARGET - now;
+
+  // Live clock
+  const utc = new Date(now);
+  elClock.textContent = utc.toISOString().slice(11,19) + ' UTC';
+  elFootDate.textContent = utc.toISOString().slice(0,19).replace('T',' ') + ' UTC';
+
+  if (diff <= 0) {
+    elD.textContent = '0000'; elH.textContent = '00';
+    elM.textContent = '00';   elS.textContent = '00';
+    elPct.textContent = '100.00%';
+    elPfill.style.width = '100%';
+    elTotalSec.textContent = '0';
+    elWarnDays.textContent = '0';
+    return;
+  }
+
+  const totalSec = Math.floor(diff / 1000);
+  const secs  = totalSec % 60;
+  const mins  = Math.floor(totalSec / 60) % 60;
+  const hours = Math.floor(totalSec / 3600) % 24;
+  const days  = Math.floor(totalSec / 86400);
+
+  const ds = pad(days, 4);
+  const hs = pad(hours);
+  const ms = pad(mins);
+  const ss = pad(secs);
+
+  if (secs  !== prevS) { elS.textContent = ss; flash(elS); prevS = secs; }
+  if (mins  !== prevM) { elM.textContent = ms; flash(elM); prevM = mins; }
+  if (hours !== prevH) { elH.textContent = hs; flash(elH); prevH = hours; }
+  if (days  !== prevD) { elD.textContent = ds; flash(elD); prevD = days; }
+
+  const elapsed = now - EPOCH;
+  const pct = (elapsed / TOTAL * 100).toFixed(4);
+  elPct.textContent = pct + '%';
+  elPfill.style.width = pct + '%';
+
+  elTotalSec.textContent = totalSec.toLocaleString();
+  elWarnDays.textContent = days.toLocaleString();
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
